@@ -1,22 +1,43 @@
-name: Deploy to GitHub Pages
-
 on:
   push:
     branches:
-      - master
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Install dependencies
-        run: npm install
-      - name: Build app
-        run: npm run build
-      - name: Deploy app
-        uses: JamesIves/github-pages-deploy-action@4.1.0
+      # Checkout project repository
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # Setup Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          branch: gh-pages
-          folder: dist
+          node-version: '16.x'
+
+      # Install dependencies
+      - name: Install dependencies
+        run: npm install --prefer-offline
+
+      # Build Application
+      - name: Build application
+        run: npm run build
+
+      # Deploy to Github Pages
+      - id: deploy
+        name: Deploy to Github Pages
+        uses: fcodelabs/react-deploy-github-pages-action@v1.0.0
+        with:
+          build_dir: dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
